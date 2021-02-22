@@ -1,0 +1,20 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t pshowell23/react-test -f ./client/Dockerfile.dev ./client
+script:
+  - docker run -e CI=true pshowell23/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t pshowell23/multi-client ./client
+  - docker build -t pshowell23/multi-nginx ./nginx
+  - docker build -t pshowell23/multi-server ./server
+  - docker build -t pshowell23/multi-worker ./worker
+  - echo "$docker_password" | docker login -u "$docker_id" --password-stdin
+  - docker push pshowell23/multi-client
+  - docker push pshowell23/multi-nginx
+  - docker push pshowell23/multi-server
+  - docker push pshowell23/multi-worker
